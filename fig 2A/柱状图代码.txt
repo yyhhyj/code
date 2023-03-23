@@ -1,0 +1,31 @@
+# install.packages("cowplot")
+library(plyr)
+library(ggplot2)
+library(reshape2)
+library(cowplot)
+
+dat2 <- read.table('family.csv', sep = ',', head = TRUE, check.names = FALSE)
+dat2$family <- factor(dat2$family, levels = unique(dat2$family))
+dat2$Taxon <- factor(dat2$Taxon, levels = unique(dat2$Taxon))
+colour<-c( "#8AA3D3","#E7747E","#E4E4F2","#FF410D", "#6EE2FF", "#D0DFE6")
+
+p1<- ggplot(dat2, aes(x=family,y=abundance,fill=Taxon)) +
+  geom_bar(stat = "identity",position = position_dodge(0.8),width = 0.8,colour = "black",size=0.1)+ #柱状图的大小
+  labs(x = '', y = 'The abundance of gene') +
+  theme_bw() +
+  theme(legend.position = 'top',
+        axis.title.x=element_text(colour='black', size=16,face = NULL,family="serif"),
+        axis.title.y=element_text(colour='black', size=16,face = NULL,family="serif"),
+        axis.text.x=element_text(colour='black',size=10,face = NULL,family="serif"),
+        axis.text.y=element_text(colour='black',size=10,face = NULL,family="serif"))+
+  labs(fill='')+
+  scale_fill_manual(values = colour)+
+  # scale_y_continuous(limits = c(0,12500))+
+  geom_errorbar(aes(ymin=abundance-SE,ymax=abundance+SE),
+                position=position_dodge(0.9),width=0.4,size=0.3)+#误差棒
+  geom_text(aes(label = sign, y = abundance+SE+800), position = position_dodge(0.9),size=6)#标注site
+p1
+
+ggsave('family.jpeg', p1, width =6, height =6,family="serif")
+ggsave('family.pdf', p1, width =6, height =6,family="serif")
+

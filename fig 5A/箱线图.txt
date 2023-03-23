@@ -1,0 +1,17 @@
+###ggplot 做图
+library(ggplot2)
+df <- read.table("Bacterial shannon.csv",header = TRUE,row.names = 1,sep = ',')
+df$site <- factor(df$site,levels = unique(df$site))
+beautiful<-c("#6E8B3D", "#FF8C00", "#FF1493", "#6495ED", "#CD9B1D", "#FFD39B", "#8B8878", "#FF3030", "#00CED1", "#ADFF2F")
+p <- ggplot(df,aes(x=site,y=valu,fill=site))+geom_boxplot()+
+  # geom_point(position = position_jitter(width = 0.1,height = 0))+#添加点，并设置点的浮动
+  theme_bw()+#设置背景
+  scale_fill_manual(values = beautiful)+#设置填充颜色
+  labs(x = 'Sites', y = 'Shannon index') +
+  theme(panel.grid=element_blank(),
+        axis.text = element_text(size = 15,colour='black',face=NULL,family="serif",angle = 30),# 横纵坐标轴刻度标签
+        axis.title = element_text(size = 20,colour='black',face=NULL,family="serif"),#横纵坐标标签
+        legend.title = element_blank(), #图例标签
+        legend.text = element_text(size =10,colour='black',face=NULL,family="serif"))#图例标签
+p
+ggsave('Bacterial.tiff',p, width = 5.5, height =4.5)

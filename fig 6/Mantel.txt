@@ -1,0 +1,49 @@
+#安装 linkET 包
+# devtools::install_github("Hy4m/linkET@HEAD", force = TRUE)
+# packageVersion("linkET")
+# install.packages("vegan")
+library(ggtext)
+library(linkET)
+library(ggplot2)
+library(dplyr)
+library(cli)
+library(rlang)
+library(magrittr)
+library(vegan)
+library(permute)
+library(lattice)
+#读取示例数据
+micro <- read.delim('PBF-D.txt', row.names = 1)
+env <- read.delim('env D.txt', row.names = 1)
+
+#计算 Mantel 相关性
+#通过 spec_select 指定数据组范围，例如这个示例数据中，微生物矩阵的第1-22列是物种丰度数据（指定名称 Taxonomy），第23-40列是基因丰度数据（指定名称 Function）
+#默认情况下，对 spec 计算 Bray-Curtis 距离，对 env 计算 Euclidean 距离，然后计算二者 Mantel 相关
+mantel <- mantel_test(spec = micro, env = env, 
+                      spec_select = list(Plant= 1:12, Bacterial= 13:24, Fungal= 25:36),
+                      mantel_fun = 'mantel')
+
+#根据相关系数和显著性设置标签，以便作图时定义线宽和颜色
+mantel <- mutate(mantel, 
+                 rd = cut(r, breaks = c(-Inf, 0.2, 0.4, Inf), labels = c('< 0.2', '0.2 - 0.4', '>= 0.4')),
+                 pd = cut(p, breaks = c(-Inf, 0.01, 0.05, Inf), labels = c('< 0.01', '0.01 - 0.05', '>= 0.05'))
+)
+mantel
+
+#绘制相关图
+p<-qcorrplot(correlate(env, method = 'spearman'), type = 'upper', diag = FALSE) +  #环境变量矩阵计算 Spearman 相关系数
+  geom_square() +  #绘制 Spearman 相关系数热图
+  geom_mark(sep = '\n', size = 2.5, sig.thres = 0.05) +  #显示 Spearman 相关系数和显著性
+  geom_couple(aes(color = pd, size = rd), data = mantel, curvature = nice_curvature()) +  #环境和微生物的相关性展示为上述 Mantel 相关
+  # scale_fill_gradientn(colors = c('#053061', '#68A8CF', 'white', '#F7B394', '#67001F'), limits = c(-1, 1)) +#根据 Spearman 相关指定热图颜色
+  scale_fill_gradientn(colors = c('#2A74B2', '#A8CFE4', 'white', '#FAC4AD', '#C2383B'), limits = c(-1, 1)) +#根据 Spearman 相关指定热图颜色
+  scale_size_manual(values = c(0.5, 1, 2)) +  #根据 Mantel 相关指定线条粗细
+  scale_color_manual(values = c('#D95F02', '#1B9E77', '#E0E0E0')) +  #根据 Mantel 相关 p 值指定线条颜色
+  guides(color = guide_legend(title = "Mantel's p", order = 1), #图例标题和排序
+         size = guide_legend(title = "Mantel's r", order = 2), 
+         fill = guide_colorbar(title = "Spearman's r", order = 3)) +
+  theme(legend.key = element_blank())
+p
+ggsave('PBF-D.pdf',p,width=9,height=7)
+
+

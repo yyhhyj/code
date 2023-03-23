@@ -1,0 +1,25 @@
+install.packages('picante')
+library(vegan)
+library(picante)
+otu<-read.csv("Bacterial.csv",row.names=1)
+otu<-t(otu)
+#物种丰富度指数
+richness<-rowSums(otu>0)
+#shannon
+shannon_index<-diversity(otu,index='shannon',base = exp(1))
+shannon_diversity<-exp(1)^shannon_index
+pielou<-shannon_index/log(richness,exp(1))
+#simpson
+gini_simpson_index<-diversity(otu,index = 'simpson')
+simpson_index<-1-gini_simpson_index
+invsimpson_index<-1/gini_simpson_index
+simpson_diversity<-1/(1-gini_simpson_index)
+equitability<-1/(richness*(1-gini_simpson_index))
+#chao1&ACE
+chao1<-estimateR(otu)[2,]
+ace<-estimateR(otu)[4,]
+#goods_coverage
+goods_coverage<-1-rowSums(otu==1)/rowSums(otu)
+
+#可选择将结果输出并保存在本地，例如将样本坐标输出为 csv 格式
+write.csv(shannon_index, 'Bacterial shannon.csv')

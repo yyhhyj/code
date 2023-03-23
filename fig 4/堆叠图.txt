@@ -1,0 +1,47 @@
+library(reshape2)
+library(ggplot2)
+phylum_top11area <- read.csv('Plan1.csv', stringsAsFactors = FALSE, check.names = FALSE)
+phylum_top11area$Taxonomy<-factor(phylum_top11area$Taxonomy,levels = c('Others','unclassified','Planctomycetes','Rokubacteria','Verrucomicrobia','Gemmatimonadetes','Bacteroidetes','Thaumarchaeota','Chloroflexi','Acidobacteria','Proteobacteria','Actinobacteria'))
+##这个排序要与颜色一一对应
+# rain<-rainbow(5)
+# rain<-c('#CC8800','#88CC00','#CC0000','#005050','#000000')
+
+rain<-c('#4b5cc4','#ff4777','#44cef6','#ffa400','#f9906f','#177cb0',
+        '#fff143','#a3d900','#ff461f','#bce672','#f47983','#808080') 
+        
+##plant
+# rain<-c('#808080','#f47983','#eaff56','#ff461f','#493131','#c9dd22',
+#          '#177cb0','#fff143','#ffa400','#44cef6','#ff4777','#4b5cc4') ##bacterial
+         
+# rain<-c('#808080','#f47983','#8d4bbb','#44cef6,'#c9dd22','#ff143',
+#             '#bce672','#177cb0','#ffa400','#44cef6','#ff4777','#4b5cc4') ##fungal
+
+##颜色的数量和颜色本身需要根据筛选菌门数量和种类更改，特别注意颜色与菌门要一一对应。
+p <- ggplot(phylum_top11area, aes(sample, 100 * value, fill = Taxonomy)) +
+  geom_col(position = 'stack') +
+  geom_area(color = NA,alpha=0.25) +
+  scale_fill_manual(values = rain) +
+  theme(panel.grid = element_blank(), 
+        panel.background = element_rect(color = 'black', fill = 'transparent'),
+        axis.text = element_blank()) +
+  labs(x = '', y = '', title = '', fill = '') +
+  scale_x_continuous(breaks = 1:15, labels = as.character(1:15), expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0))
+p
+
+p<-p+
+  geom_col(position = 'stack', width = 0.7) +
+  # facet_wrap(~group, scales = 'free_x', ncol = 2) +
+  scale_fill_manual(values = rain) +
+  labs(x = 'Sample sites', y = 'Relative Abundance(%)',fill = 'Top10 Phylum') +
+  theme(panel.grid = element_blank(), panel.background = element_rect(color = 'black', fill = 'transparent'), strip.text = element_text(size = 12)) +
+  theme(axis.text= element_text(size = 18,family="serif"), 
+        axis.title = element_text(size = 20,family="serif"),
+        #legend.position = 'none',
+        ##不加图例的时候把这句话前面的#去掉
+        legend.title = element_blank(), 
+        legend.text = element_text(size = 18,family="serif"))
+p
+
+ggsave('plan.tiff', p, width = 6, height = 6)
+

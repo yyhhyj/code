@@ -1,0 +1,24 @@
+library(reshape2)
+library(ggplot2)
+
+#读入文件，合并分组信息，数据重排
+alpha <- read.table('AA.txt', sep = '\t', header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+group  <- read.table('group.txt', sep = '\t', header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+alpha <- melt(merge(alpha, group, by = 'sample'), id = c('sample', 'group'))
+
+#选择要比较的分组（此处查看 group1 与 group2 在 shannon 指数上是否存在显著差异）
+shannon_DW <- subset(alpha, variable == 'shannon' & group %in% c('D', 'W'))
+shannon_DW$group <- factor(shannon_DW$group)
+head(shannon_DW, 10)
+
+#Shapiro-Wilk 检验数据是否符合正态分布（发现不符合正态分布?）
+tapply(shannon_DW$value, shannon_DW$group, shapiro.test)
+
+##wilcox 秩和检验，我们执行了一个双侧检验
+wilcox_test <- wilcox.test(value~group, shannon_DW, paired = FALSE, alternative = 'two.sided')
+wilcox_test
+wilcox_test$p.value
+# #boxplot() 箱线图
+# p<-boxplot(value~group, data = shannon_DW, col = c('blue', 'orange'), ylab = 'niche width', xlab = 'Group', main = 'wilcox test: p-value = 0.61')
+
+p

@@ -1,0 +1,68 @@
+install.packages("ape")
+library(permute)
+library(lattice)
+library(ape)
+library(nlme)
+library(ggplot2)
+library(vegan)
+
+otu <- read.csv('New Family.csv',row.names = 1)
+otu <- data.frame(t(otu))
+
+#NMDS 排序，定义 2 个维度，详情 ?metaMDS   或K=2,4
+nmds_otu <- metaMDS(otu, distance = 'bray', k = 4)
+nmds_otu
+#应力函数值，一般不大于 0.2 为合理
+nmds_otu$stress
+#样方得分
+
+nmds_otu_site <- data.frame(nmds_otu$points)
+a<-rownames(nmds_otu_site)
+nmds_otu_site <-cbind(a,nmds_otu_site)
+# nmds_otu_site$a<-factor(nmds_otu_site$a,levels = c("Ap",'Ju','Au'))
+
+
+#write.table(nmds_otu_site, 'nmds_otu_site.txt', sep = '\t', col.names = NA, quote = FALSE)
+#物种得分，这种模式下可直接计算出物种得分，具体怎么算出来的，问作者吧……
+nmds_otu_species <- data.frame(nmds_otu$species)
+
+library(ggplot2)
+#添加分组信息
+# nmds_otu_site$name <- rownames(nmds_otu_site)
+nmds_otu_site$site <- rep(c(rep('D',36), rep('W',36)))
+nmds_otu_site$elevation <-rep(c(rep('E1',9), rep('E2', 9), rep('E3',9),rep('E4',9)),2)
+nmds_otu_site
+#write.table(nmds_otu_site, 'nmds_gh_site.txt', sep = '\t', col.names = NA, quote = FALSE)
+
+beautiful<-c('blue', 'orange')
+
+
+p <- ggplot(data=nmds_otu_site, aes(x=MDS1, y=MDS2,color = site,shape=elevation)) +
+  geom_point(size=8) +
+  scale_shape_manual(values = c(15,13,20,14))+
+  scale_color_manual(values =beautiful) +
+  guides(color=guide_legend(override.aes = list(size=5)))+
+  #scale_fill_manual(values = c('beautiful'))+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(), panel.background = element_rect(color = 'black', fill = 'transparent'), 
+        plot.title = element_text(size = 24,hjust = 0.5),legend.key = element_blank(),
+        axis.title.x=element_text(colour='black', size=22,family="serif"),
+        axis.title.y=element_text(colour='black', size=22,family="serif"),
+        axis.text.x=element_text(colour='black',size=18,family="serif"),
+        axis.text.y=element_text(colour='black',size=18,family="serif"),
+        panel.grid = element_blank(),
+        axis.ticks.length = unit(0.4,"lines"), 
+        axis.ticks = element_line(color='black'),
+        axis.line = element_line(colour = "black"),
+        legend.title = element_text(colour='black',size=20,family="serif"),
+        legend.text = element_text(size=16,family="serif")) +
+  labs(x = 'NMDS1', y = 'NMDS2') +
+  ggtitle("NMDS-1")
+# scale_x_continuous(limits = c(-0.2,0.2))+scale_y_continuous(limits = c(-0.3,0.2))
+p
+p1<-p+annotate('text', label = paste('Stress =', round(nmds_otu$stress, 4)),size =6,y=0.15,x=0.15, colour = 'black') 	#标注应力函数值
+p1
+
+
+#ggsave('NMDS.pdf', p2, width = 5.5, height = 5.5)
+ggsave('NMDS.JPG', p1, width = 12, height =10)
+

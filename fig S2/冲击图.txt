@@ -1,0 +1,51 @@
+# install.packages("reshape")
+library(reshape)
+dat <- read.delim('Class.txt', sep = '\t', stringsAsFactors = FALSE, check.names = FALSE)
+
+#该丰度表中，已经提前按总丰度水平的高低作了降序排序
+#现在将分类列转化为因子类型，即指定了预先定义的类群展示顺序
+dat$Taxonomy <- factor(dat$Taxonomy, levels = rev(dat$Taxonomy))
+
+#整理成 ggplot2 作图格式
+dat <- reshape::melt(dat, id = 'Taxonomy')
+
+# #添加分组，根据样本分组绘制分面
+# group <- read.delim('group1.txt', sep = '\t', stringsAsFactors = FALSE)
+# names(group)[1] <- 'variable'
+# dat <- merge(dat, group, by = 'variable')
+
+#绘制带分面的柱状图
+library(ggplot2)
+
+color <- c('#90EE90', '#F5DEB3', '#87CEFA', '#8470FF')
+                 
+p <- ggplot(dat, aes(x = variable, y = value, fill = Taxonomy)) +
+  geom_col(position = 'stack', width = 0.6) +  #堆叠柱形图
+  # facet_wrap(~group, scales = 'free_x', ncol = 2) +  #分面图
+  scale_fill_manual(values = color) +  #填充颜色赋值
+  labs(x = '', y = 'The abundance of gene')
+
+p
+
+#修改为带分面的冲击图
+# install.packages("ggalluvial")
+library(ggalluvial)
+
+p <- ggplot(dat, aes(x = variable, y = value, fill = Taxonomy, 
+                     stratum = Taxonomy, alluvium = Taxonomy)) +
+  geom_stratum() +  #代替 geom_col() 绘制堆叠柱形图
+  geom_flow(alpha = 0.5) +  #绘制同类别之间的连接线
+  # facet_wrap(~group, scales = 'free_x', ncol = 2) +  #分面图
+  scale_fill_manual(values = color) +
+  labs(x = '', y = 'Relative Abundance(%)')
+
+p
+#继续修改主题，如背景色、网格线、图例、字体等
+#和 ggplot2 的使用一样的
+p <- p + theme(panel.grid = element_blank(), strip.text = element_text(size = 12),
+               panel.background = element_rect(color = 'black', fill = 'transparent')) +
+  theme(axis.text = element_text(size = 12), axis.title = element_text(size = 13),
+        legend.title = element_blank(), legend.text = element_text(size = 11))
+
+p
+ggsave("Class.pdf",p,width = 10,height = 8)

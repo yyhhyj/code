@@ -1,0 +1,39 @@
+##相关系数计算
+# install.packages("reshape2")
+# install.packages("psych")
+library(psych)
+#读入分类群丰度表
+# taxonomy <- read.delim('tax.txt', row.names = 1, sep = '\t', stringsAsFactors = FALSE, check.names = FALSE)
+taxonomy <- read.table('new PFB D.csv', sep = ',',header = TRUE,row.names = 1)
+#读取环境数据
+# env <- read.delim('env D.txt', row.names = 1, sep = '\t', stringsAsFactors = FALSE, check.names = FALSE)
+# env <- env[rownames(taxonomy), ]
+env <-read.table('env D.csv', sep = ',',header = TRUE,row.names = 1)
+env <-env[rownames(taxonomy),]
+#以环境和分类群的 spearman 相关系数为例，p 值默认使用 Benjamini & Hochberg 方法校正
+corr_matrix <- corr.test(taxonomy, env, method = 'spearman', adjust = 'BH')
+r <- corr_matrix$r    #相关系数矩阵
+p <- corr_matrix$p    #p 值矩阵
+write.csv(r,"r-PFB-D.csv")
+write.csv(p,"p-PFB-D.csv")
+
+# install.packages("corrplot")
+library(corrplot)#month-log
+tiff(file="fig3DW.tiff",bg="transparent",width=500*10,height=400*10,res=50*10,family = "serif")
+pdf(file="fig3DW.pdf",family = "GB1")
+corelation=read.csv("r-PFB-DW.csv",row.names = 1,header = T)
+corelation=t(t(corelation))
+corrplot(corelation, method = "circle", type = "full",   tl.pos = "lt", tl.cex= 2.5,tl.col="black" ,tl.srt = 90,cl.pos = "r", 
+         cl.length = 5, cl.cex = 2.5, cl.ratio = 0.3, cl.align.text = "l", 
+         cl.offset = 1,addgrid.col="gray",mar=c(1,1,1,1)) 
+##这句话通过method可以调整图像类型，比如方形，饼图，圆圈都可，但是具体调整后需要修改参数，自己输入?corrplot进行查询
+setwd("C:/青海/9月15日data/相关性")
+##图片输出位置，注意，路径不可以用\，需要用/，斜杠在R里面有特殊转义符的意思，不可以乱用
+dev.off()
+getwd()
+
+
+
+
+
+
